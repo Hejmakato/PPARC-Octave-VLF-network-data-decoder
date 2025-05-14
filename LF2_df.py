@@ -131,7 +131,7 @@ def read_data(file, header):
 
     return amplitude, phase, lightning
 
-def data_oneday(date, station, root_folder, export_folder = None):
+def lf2df(date, station, root_folder, export_folder = None):
     '''
     Process 1 day data
     
