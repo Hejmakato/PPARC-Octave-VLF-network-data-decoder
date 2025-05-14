@@ -10,33 +10,38 @@ Data can be downloaded from https://pparc.gp.tohoku.ac.jp/research/vlf/
 To process one hour data:
 ```
 import pandas as pd
-filepath = path_to_your_data
-amplitude, phase = lf2_df(filepath)
-```
-output: two dataframes with amplitude and phase data
+filepath = "C:/KAG2025051501.dat"
+file = open(filepath, "rb")
+header = Header(file)
+amplitude, phase, lightning = read_data(file, header)
 
-to process whole day of data:
+```
+output: 3 dataframes with amplitude, phase, and lightning data
+
+top process one day of data:
+```
+date = pd.Timestamp("2025-05-15")
+station = "KAG"
+root_folder = "D:/raw"
+export_folder = "D:/daily"
+
+amplitude, phase, lightning = data_oneday(date, station, root_folder)    # export_folder is optional. Skip this option to skip export.
+```
+
+to process multiple day of data:
 ```
 import os
 import pandas as pd
 
+date_range = pd.date_range("2022-01-30", "2022-01-31", freq="D")
 station = 'KAG'
-date = pd.Timestamp('2022-01-15')
-date_str = date.strftime('%Y%m%d')
-folder = path_to_your_data
+root_folder = "D:/daily/wget"
+export_folder = "D:/daily/OCTAVE"    ## OPTIONAL
 
-amplitude = pd.DataFrame()
-phase = pd.DataFrame()
-for i in range(0,24):
-    hour = str(i).zfill(2)
-    filepath = os.path.join(folder, f"{station}{date_str}{hour}.dat")
-    # print(filepath)
-    amp, ph = lf2_df(filepath)
-    amplitude = pd.concat([amplitude, amp], axis=0)
-    phase = pd.concat([phase, ph], axis=0)
-    print(f"Data for {hour} hours processed.")
+for date in date_range:
+    data_oneday(date, station, root_folder, export_folder)    # export_folder is optional. Skip this option to skip export.
 ```
-output: 2 dataframe with combined one-day data
+output: 3 dataframe with combined one-day data
 
 ## For .spc file
 To process one hour data:
@@ -69,3 +74,4 @@ for i in range(0,24):
     print(f"Data for {hour} hours processed.")
 ```
 output: 2 dataframe with combined one-day data
+### NOTE: .spc data will be updated soon. I need to catch some zzz now.
