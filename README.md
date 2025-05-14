@@ -25,7 +25,7 @@ station = "KAG"
 root_folder = "D:/raw"
 export_folder = "D:/daily"
 
-amplitude, phase, lightning = data_oneday(date, station, root_folder)    # export_folder is optional. Skip this option to skip export.
+amplitude, phase, lightning = lf2df(date, station, root_folder)    # export_folder is optional. Skip this option to skip export.
 ```
 
 to process multiple day of data:
