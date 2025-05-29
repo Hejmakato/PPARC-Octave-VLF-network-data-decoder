@@ -18,17 +18,18 @@ Date | Note | Version | Contributor
 |2016/08/04	| Multi-channel input supported |Ver.2.4 | 土屋
 |2017/07/09	| Unit of power is dBVpp@ADC    |Ver.2.5 | Tsuchiya
 
-## Phase and amplitude data for selected frequencies (NF points)
+### Phase and amplitude data for selected frequencies (NF points)
 Filename: SSSYYYYMMDDHH_CH.dat
 SSS: Station name
 CH: Channel number
+
 *** Note: When there is only one channel, _CH is not added to the file name.
 
-## Parameters of the files
+### Parameters of the files
 Number of selected frequencies: n_fq=10 (maximum 20 points, adjustable by n_fq and fq_list.txt)
 Time resolution: 0.1 seconds
 
-## Data structure
+### Data structure
 For each 1-second data:
 
 header block
@@ -45,7 +46,7 @@ For each block, the number of bytes in a block is
 
 So if the number of frequencies is 10, each block contains 424 bytes; if 15, each contains 624 bytes; and if 20, each contains 824 bytes.
 
-## Header block structure
+### Header block structure
 |Parameters `(units)`| Byte type | Byte location in block |
 |:---- | :----: | :----: |
 |Year `(YYYY)` | signed single (2byte) | 2 |
@@ -67,33 +68,33 @@ So if the number of frequencies is 10, each block contains 424 bytes; if 15, eac
 |SW version | unsigned char (1byte) | Block size - 2	
 |SW sub-version | unsigned char (1byte) | Block size - 1
 
-## Data block structure
+### Data block structure
 |Parameters `(units)`| Byte type |
 |:---- | :----: |
 | Header block (must be 32767) | signed single (2byte)
-|時間(MMSS) | signed single (2byte)
-|振幅値×NF @ HHMMSS.0 | signed single (2byte)×n_fq	
-|位相値×NF @ HHMMSS.0 | signed single (2byte)×n_fq
-|雷モニタ値 @ HHMMSS.0 | signed single (2byte)		
-|振幅値×NF @ HHMMSS.1 | signed single (2byte)×n_fq	
-|位相値×NF @ HHMMSS.1 | signed single (2byte)×n_fq
-|雷モニタ値 @ HHMMSS.1 | signed single (2byte)
+|Time(MMSS) | signed single (2byte)
+|Amplitude×NF @ HHMMSS.0 | signed single (2byte)×n_fq	
+|Phase×NF @ HHMMSS.0 | signed single (2byte)×n_fq
+|Lightning monitor @ HHMMSS.0 | signed single (2byte)		
+|Amplitude×NF @ HHMMSS.1 | signed single (2byte)×n_fq	
+|Phase×NF @ HHMMSS.1 | signed single (2byte)×n_fq
+|Lightning monitor @ HHMMSS.1 | signed single (2byte)
 |・・・							
-|振幅値×NF @ HHMMSS.9 | signed single (2byte)×n_fq	
-|位相値×NF @ HHMMSS.9 | signed single (2byte)×n_fq
-|雷モニタ値 @ HHMMSS.9 | signed single (2byte)
+|Amplitude×NF @ HHMMSS.9 | signed single (2byte)×n_fq	
+|Phase×NF @ HHMMSS.9 | signed single (2byte)×n_fq
+|Lightning monitor @ HHMMSS.9 | signed single (2byte)
 
 Number of bytes in data = $10 \times (2 \times 2 \text{bytes} \times \text{n}_{fq} + 2)$
 
-### Unit conversion factor
+#### Unit conversion factor
 |Parameter | Recorded units | Conversion factor |
 |:---- | :----: | :----: |
 |Amplitude | dBc×100 | 0.01 |
 |Phase | radians×1000 | 0.001 |
 |Lightning monitor | dBc×100 | 0.01 |
 
-### $dB_c$ to $dB_{V_{pp}}$
-```Math
+#### $dB_c$ to $dB_{V_{pp}}$
+```math
 dB_{V_{pp}} = dB_c + P_{cnv}
 ```
 |FFT window| Blackman | Flat | Hanning | Hamming |
@@ -101,4 +102,54 @@ dB_{V_{pp}} = dB_c + P_{cnv}
 |$P_{cnv}$ | -52.5 | -60 | -54 | -54.7
 
 
+## Frequency and Phase spectrum data
+Filename: SSSYYYYMMDDHH_CH.spc
+SSS: station name
+CH : channel number
+
+### Parameters
+Time decomposition (n_save_t)：	30s on average
+Time resolution (n_save_f)：	50Hz
+Frequency range：	0-100kHz
+FFT points (n_fft):   4000
+No. of data points：	NS = n_fft/n_save_f/2+1 = 2001
+
+### Data format
+	30(n_save_t)秒に1blockのデータを生成
+
+	[header block]
+	[data block1] (NS x 2 x 2byte + 2 x 2byte)
+	[data block2] (NS x 2 x 2byte + 2 x 2byte)
+	[data block3] (NS x 2 x 2byte + 2 x 2byte)
+	・・・
+
+	blockサイズ：NS x 2 x 2byte + 2 x 2byte
+			NS=2001の時、8,008 byte (ファイルサイズ：8,008 ×(2 * 60 + 1) = 968,968)
+
+	header block内データフォーマット
+		年(YYYY)		signed single (2byte)		2 [Total Byte]
+		月日(MMDD)		signed single (2byte)		4
+		時(HH)			signed single (2byte)		6
+		サンプリング周波数[kHz]	signed single (2byte)		8
+		FFT点数			signed single (2byte)		10
+		時間方向平均[sec]	signed single (2byte)		12
+		周波数方向平均[pt]	signed single (2byte)		14
+		周波数方向点数		signed single (2byte)		16
+		周波数分解能[Hz]	signed single (2byte)		18
+		ブロックサイズ[Byte]	signed single (2byte)		20
+		観測地点名		char[4]	      (4byte)		24
+		WDT発生回数		signed single (2byte)		26
+		チャンネル番号		unsigned char (1byte)		27
+		チャンネル数		unsigned char (1byte)		28
+		FFT window		unsigned char (1byte)		29
+		ブロックの残り部分は0詰
+		SW version		unsigned char (1byte)		30
+		SW sub-version		unsigned char (1byte)		31
+
+	data block内フォーマット
+		先頭データ(32767) 	signed single (2byte)
+		時間(MMSS)※		signed single (2byte)
+		振幅値[dBc]×NS		signed single (2byte)×NS
+		位相値[rad]×NS		signed single (2byte)×NS
+		※時刻は、平均に使用した最後のデータの取得時刻
 
