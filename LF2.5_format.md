@@ -114,42 +114,48 @@ Frequency range：	0-100kHz
 FFT points (n_fft):   4000
 No. of data points：	NS = n_fft/n_save_f/2+1 = 2001
 
-### Data format
-	30(n_save_t)秒に1blockのデータを生成
+### Data structure
+For each 30s block of data:
 
-	[header block]
-	[data block1] (NS x 2 x 2byte + 2 x 2byte)
-	[data block2] (NS x 2 x 2byte + 2 x 2byte)
-	[data block3] (NS x 2 x 2byte + 2 x 2byte)
-	・・・
+Header block
+Data block 1:  NS × 2 × 2 byte + 2 × 2 byte
+Data block 2:  NS × 2 × 2 byte + 2 × 2 byte
+Data block 3:  NS × 2 × 2 byte + 2 × 2 byte
+...
+etc.
 
-	blockサイズ：NS x 2 x 2byte + 2 x 2byte
-			NS=2001の時、8,008 byte (ファイルサイズ：8,008 ×(2 * 60 + 1) = 968,968)
+### Header block structure
+|Parameters `(units)`| Byte type | Byte location in block |
+|:---- | :----: | :----: |
+|Year `(YYYY)`|signed single (2byte)|2|
+|Month and Day `(MMDD)` | signed single (2byte) | 4 |
+|Hour `(HH)` | signed single (2byte) | 6 |
+|Sampling frequency `(kHz)` | signed single (2byte) | 8 |
+|Data length for FFT | signed single (2byte) | 10 |
+|Time direction average `(sec)` | signed single (2byte) | 12 |
+|Frequency direction average `(pt)` | signed single (2byte) | 14 |
+|Frequency direction points |  signed single (2byte) | 16 |
+|Frequency resolution `(Hz)` | signed single (2byte) | 18 |
+|Block size `(byte)` | signed single (2byte) | 20 |
+|Station name | char[4] (4byte) | 24 |
+|WDT events | signed single (2byte) | 26
+|Channel number | unsigned char (1byte) | 27
+|Number of Channels | unsigned char (1byte) | 28
+|FFT window | unsigned char (1byte) | 29
+|zero padding | zero (Block size - 29 - 2 × NS - 2)  | 28+n_fq*2
+|SW version | unsigned char (1byte) | Block size - 2	
+|SW sub-version | unsigned char (1byte) | Block size - 1
 
-	header block内データフォーマット
-		年(YYYY)		signed single (2byte)		2 [Total Byte]
-		月日(MMDD)		signed single (2byte)		4
-		時(HH)			signed single (2byte)		6
-		サンプリング周波数[kHz]	signed single (2byte)		8
-		FFT点数			signed single (2byte)		10
-		時間方向平均[sec]	signed single (2byte)		12
-		周波数方向平均[pt]	signed single (2byte)		14
-		周波数方向点数		signed single (2byte)		16
-		周波数分解能[Hz]	signed single (2byte)		18
-		ブロックサイズ[Byte]	signed single (2byte)		20
-		観測地点名		char[4]	      (4byte)		24
-		WDT発生回数		signed single (2byte)		26
-		チャンネル番号		unsigned char (1byte)		27
-		チャンネル数		unsigned char (1byte)		28
-		FFT window		unsigned char (1byte)		29
-		ブロックの残り部分は0詰
-		SW version		unsigned char (1byte)		30
-		SW sub-version		unsigned char (1byte)		31
+### Data block structure
 
-	data block内フォーマット
-		先頭データ(32767) 	signed single (2byte)
-		時間(MMSS)※		signed single (2byte)
-		振幅値[dBc]×NS		signed single (2byte)×NS
-		位相値[rad]×NS		signed single (2byte)×NS
-		※時刻は、平均に使用した最後のデータの取得時刻
+|Parameters `(units)`| Byte type |
+|:---- | :----: |
+| Header block (must be 32767) | signed single (2byte)
+|Time `(MMSS)` | signed single (2byte)
+|Amplitude×NS `(dBc)` | signed single (2byte) × NS	
+|Phase×NS `(rad)` | signed single (2byte) × NS
+|Lightning monitor @ HHMMSS.0 | signed single (2byte)		
+|Amplitude×NF @ HHMMSS.1 | signed single (2byte)×n_fq	
+|Phase×NF @ HHMMSS.1 | signed single (2byte)×n_fq
 
+***NOTE: The timestamp on the data refers to timestamp on last acquired data.
